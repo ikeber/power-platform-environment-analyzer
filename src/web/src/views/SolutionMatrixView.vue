@@ -1,10 +1,36 @@
 <script setup lang="ts">
-import { h } from 'vue'
+import { computed, h, ref } from 'vue'
 import type { DataTableColumns } from 'naive-ui'
-import { NDataTable, NTag } from 'naive-ui'
+import { NDataTable, NInput, NSwitch, NTag } from 'naive-ui'
 
 import { environments, solutionComparisons } from '@/mocks/solutionMatrix'
 import type { SolutionComparison } from '@/models/solutionMatrix'
+
+const search = ref('')
+const differencesOnly = ref(true)
+
+const filteredSolutions = computed(() => {
+  const searchText = search.value.trim().toLowerCase()
+
+  return solutionComparisons.filter((row) => {
+    const hasDifference =
+      row.differences.missing || row.differences.version || row.differences.managedState
+
+    if (differencesOnly.value && !hasDifference) {
+      return false
+    }
+
+    if (
+      searchText &&
+      !row.friendlyName.toLowerCase().includes(searchText) &&
+      !row.uniqueName.toLowerCase().includes(searchText)
+    ) {
+      return false
+    }
+
+    return true
+  })
+})
 
 const columns: DataTableColumns<SolutionComparison> = [
   {
@@ -75,10 +101,17 @@ const columns: DataTableColumns<SolutionComparison> = [
         <p>Compare installed solutions across Dataverse environments.</p>
       </div>
     </header>
+    <div class="toolbar">
+      <NInput v-model:value="search" placeholder="Search solutions..." clearable />
 
+      <label class="differences-toggle">
+        <NSwitch v-model:value="differencesOnly" />
+        <span>Differences only</span>
+      </label>
+    </div>
     <NDataTable
       :columns="columns"
-      :data="solutionComparisons"
+      :data="filteredSolutions"
       :pagination="false"
       :row-key="(row) => row.uniqueName"
       striped
