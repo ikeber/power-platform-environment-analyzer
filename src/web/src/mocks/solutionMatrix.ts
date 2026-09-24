@@ -1,4 +1,4 @@
-import type { Environment, SolutionComparison } from '@/models/solutionMatrix'
+import type { Environment, Solution, SolutionComparison } from '@/models/solutionMatrix'
 
 export const environments: Environment[] = [
   {
@@ -11,9 +11,19 @@ export const environments: Environment[] = [
     displayName: 'TEST',
     url: 'https://contoso-test.crm.dynamics.com',
   },
+  {
+    id: 'uat',
+    displayName: 'UAT',
+    url: 'https://contoso-uat.crm.dynamics.com',
+  },
+  {
+    id: 'prod',
+    displayName: 'PROD',
+    url: 'https://contoso-prod.crm.dynamics.com',
+  },
 ]
 
-export const solutionComparisons: SolutionComparison[] = [
+const solutions: Omit<SolutionComparison, 'differences'>[] = [
   {
     uniqueName: 'contoso_core',
     friendlyName: 'Contoso Core',
@@ -32,11 +42,20 @@ export const solutionComparisons: SolutionComparison[] = [
         version: '2.4.0.0',
         isManaged: false,
       },
-    },
-    differences: {
-      missing: false,
-      version: false,
-      managedState: false,
+      uat: {
+        solutionId: '31111111-1111-1111-1111-111111111111',
+        uniqueName: 'contoso_core',
+        friendlyName: 'Contoso Core',
+        version: '2.4.0.0',
+        isManaged: true,
+      },
+      prod: {
+        solutionId: '41111111-1111-1111-1111-111111111111',
+        uniqueName: 'contoso_core',
+        friendlyName: 'Contoso Core',
+        version: '2.4.0.0',
+        isManaged: true,
+      },
     },
   },
 
@@ -58,11 +77,20 @@ export const solutionComparisons: SolutionComparison[] = [
         version: '3.1.0.0',
         isManaged: false,
       },
-    },
-    differences: {
-      missing: false,
-      version: true,
-      managedState: false,
+      uat: {
+        solutionId: '31111111-2222-2222-2222-222222222222',
+        uniqueName: 'contoso_sales',
+        friendlyName: 'Contoso Sales',
+        version: '3.1.0.0',
+        isManaged: true,
+      },
+      prod: {
+        solutionId: '41111111-2222-2222-2222-222222222222',
+        uniqueName: 'contoso_sales',
+        friendlyName: 'Contoso Sales',
+        version: '3.1.0.0',
+        isManaged: true,
+      },
     },
   },
 
@@ -84,11 +112,20 @@ export const solutionComparisons: SolutionComparison[] = [
         version: '1.5.0.0',
         isManaged: true,
       },
-    },
-    differences: {
-      missing: false,
-      version: false,
-      managedState: true,
+      uat: {
+        solutionId: '31111111-3333-3333-3333-333333333333',
+        uniqueName: 'contoso_service',
+        friendlyName: 'Contoso Service',
+        version: '1.5.0.0',
+        isManaged: true,
+      },
+      prod: {
+        solutionId: '41111111-3333-3333-3333-333333333333',
+        uniqueName: 'contoso_service',
+        friendlyName: 'Contoso Service',
+        version: '1.5.0.0',
+        isManaged: true,
+      },
     },
   },
 
@@ -104,11 +141,8 @@ export const solutionComparisons: SolutionComparison[] = [
         isManaged: false,
       },
       test: null,
-    },
-    differences: {
-      missing: true,
-      version: false,
-      managedState: false,
+      uat: null,
+      prod: null,
     },
   },
 
@@ -124,11 +158,20 @@ export const solutionComparisons: SolutionComparison[] = [
         version: '4.0.0.0',
         isManaged: true,
       },
-    },
-    differences: {
-      missing: true,
-      version: false,
-      managedState: false,
+      uat: {
+        solutionId: '31111111-5555-5555-5555-555555555555',
+        uniqueName: 'contoso_integration',
+        friendlyName: 'Contoso Integration',
+        version: '4.0.0.0',
+        isManaged: true,
+      },
+      prod: {
+        solutionId: '41111111-5555-5555-5555-555555555555',
+        uniqueName: 'contoso_integration',
+        friendlyName: 'Contoso Integration',
+        version: '4.0.0.0',
+        isManaged: true,
+      },
     },
   },
 
@@ -150,11 +193,20 @@ export const solutionComparisons: SolutionComparison[] = [
         version: '2.0.0.0',
         isManaged: true,
       },
-    },
-    differences: {
-      missing: false,
-      version: true,
-      managedState: true,
+      uat: {
+        solutionId: '31111111-6666-6666-6666-666666666666',
+        uniqueName: 'contoso_reporting',
+        friendlyName: 'Contoso Reporting',
+        version: '2.0.0.0',
+        isManaged: true,
+      },
+      prod: {
+        solutionId: '41111111-6666-6666-666666666666',
+        uniqueName: 'contoso_reporting',
+        friendlyName: 'Contoso Reporting',
+        version: '1.9.0.0',
+        isManaged: true,
+      },
     },
   },
 
@@ -176,11 +228,60 @@ export const solutionComparisons: SolutionComparison[] = [
         version: '1.2.3.0',
         isManaged: true,
       },
-    },
-    differences: {
-      missing: false,
-      version: false,
-      managedState: false,
+      uat: {
+        solutionId: '31111111-7777-7777-7777-777777777777',
+        uniqueName: 'contoso_shared',
+        friendlyName: 'Contoso Shared Components',
+        version: '1.2.3.0',
+        isManaged: true,
+      },
+      prod: {
+        solutionId: '41111111-7777-7777-7777-777777777777',
+        uniqueName: 'contoso_shared',
+        friendlyName: 'Contoso Shared Components',
+        version: '1.2.3.0',
+        isManaged: true,
+      },
     },
   },
 ]
+
+// Mock comparison adapter for Stage 1. Production comparison will belong in the API.
+export function getSolutionComparisons(environmentIds: readonly string[]): SolutionComparison[] {
+  const selectedEnvironments = environments.filter((environment) =>
+    environmentIds.includes(environment.id),
+  )
+
+  if (selectedEnvironments.length < 2) {
+    return []
+  }
+
+  return solutions.flatMap((row) => {
+    const selectedSolutions = Object.fromEntries(
+      selectedEnvironments.map((environment) => [
+        environment.id,
+        row.environments[environment.id] ?? null,
+      ]),
+    )
+    const presentSolutions = Object.values(selectedSolutions).filter(
+      (solution): solution is Solution => solution !== null,
+    )
+
+    if (presentSolutions.length === 0) {
+      return []
+    }
+
+    return [
+      {
+        uniqueName: row.uniqueName,
+        friendlyName: row.friendlyName,
+        environments: selectedSolutions,
+        differences: {
+          missing: presentSolutions.length < selectedEnvironments.length,
+          version: new Set(presentSolutions.map((solution) => solution.version)).size > 1,
+          managedState: new Set(presentSolutions.map((solution) => solution.isManaged)).size > 1,
+        },
+      },
+    ]
+  })
+}
