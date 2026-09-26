@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="src/api/PowerPlatformDriftAnalyzer.Api.csproj" />
+  <Project Path="tests/PowerPlatformDriftAnalyzer.Api.Tests/PowerPlatformDriftAnalyzer.Api.Tests.csproj" />
+</Solution>

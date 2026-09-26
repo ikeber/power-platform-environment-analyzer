@@ -1,19 +1,78 @@
 <script setup lang="ts">
-import { computed, h, ref } from 'vue'
+import { computed, h, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { DataTableColumns } from 'naive-ui'
 import { NDataTable, NInput, NSwitch, NTag } from 'naive-ui'
 
-import { environments, getSolutionComparisons } from '@/mocks/solutionMatrix'
-import type { SolutionComparison } from '@/models/solutionMatrix'
+import { getEnvironments, getSolutionComparisons } from '@/services/solutionMatrix'
+import type { Environment, SolutionComparison } from '@/models/solutionMatrix'
 
 const search = ref('')
 const differencesOnly = ref(true)
-const selectedEnvironmentIds = ref(environments.slice(0, 2).map((environment) => environment.id))
+const environments = ref<Environment[]>([])
+const selectedEnvironmentIds = ref<string[]>([])
+const solutionComparisons = ref<SolutionComparison[]>([])
+const loadingEnvironments = ref(true)
+const loadingComparison = ref(false)
+const environmentError = ref('')
+const comparisonError = ref('')
+let environmentRequest: AbortController | undefined
+let comparisonRequest: AbortController | undefined
+
 const selectedEnvironments = computed(() =>
-  environments.filter((environment) => selectedEnvironmentIds.value.includes(environment.id)),
+  environments.value.filter((environment) => selectedEnvironmentIds.value.includes(environment.id)),
 )
 const canCompare = computed(() => selectedEnvironments.value.length >= 2)
-const solutionComparisons = computed(() => getSolutionComparisons(selectedEnvironmentIds.value))
+
+async function loadEnvironments() {
+  environmentRequest?.abort()
+  const request = new AbortController()
+  environmentRequest = request
+  loadingEnvironments.value = true
+  environmentError.value = ''
+
+  try {
+    const result = await getEnvironments(request.signal)
+    if (request.signal.aborted) return
+    environments.value = result
+    selectedEnvironmentIds.value = result.slice(0, 2).map((environment) => environment.id)
+  } catch {
+    if (!request.signal.aborted) {
+      environmentError.value = 'Unable to load environments. Please try again.'
+    }
+  } finally {
+    if (!request.signal.aborted) loadingEnvironments.value = false
+  }
+}
+
+async function loadComparison() {
+  comparisonRequest?.abort()
+  solutionComparisons.value = []
+  comparisonError.value = ''
+  loadingComparison.value = false
+  if (!canCompare.value) return
+
+  const request = new AbortController()
+  comparisonRequest = request
+  loadingComparison.value = true
+
+  try {
+    const result = await getSolutionComparisons([...selectedEnvironmentIds.value], request.signal)
+    if (!request.signal.aborted) solutionComparisons.value = result
+  } catch {
+    if (!request.signal.aborted) {
+      comparisonError.value = 'Unable to load the comparison. Please try again.'
+    }
+  } finally {
+    if (!request.signal.aborted) loadingComparison.value = false
+  }
+}
+
+watch(selectedEnvironmentIds, loadComparison)
+onMounted(loadEnvironments)
+onBeforeUnmount(() => {
+  environmentRequest?.abort()
+  comparisonRequest?.abort()
+})
 
 const filteredSolutions = computed(() => {
   const searchText = search.value.trim().toLowerCase()
@@ -108,7 +167,16 @@ const columns = computed<DataTableColumns<SolutionComparison>>(() => [
         <p>Showing sample data.</p>
       </div>
     </header>
-    <fieldset class="environment-selection" aria-describedby="environment-selection-help">
+    <p v-if="loadingEnvironments" role="status">Loading environments...</p>
+    <div v-else-if="environmentError" role="alert">
+      <p>{{ environmentError }}</p>
+      <button type="button" @click="loadEnvironments">Retry loading environments</button>
+    </div>
+    <fieldset
+      v-if="!loadingEnvironments && !environmentError"
+      class="environment-selection"
+      aria-describedby="environment-selection-help"
+    >
       <legend>Environments</legend>
       <div class="environment-options">
         <label v-for="environment in environments" :key="environment.id">
@@ -118,7 +186,7 @@ const columns = computed<DataTableColumns<SolutionComparison>>(() => [
       </div>
       <p id="environment-selection-help">Select two or more environments to compare.</p>
     </fieldset>
-    <div class="toolbar">
+    <div v-if="!loadingEnvironments && !environmentError" class="toolbar">
       <NInput
         v-model:value="search"
         placeholder="Search solutions..."
@@ -131,16 +199,25 @@ const columns = computed<DataTableColumns<SolutionComparison>>(() => [
         <span>Differences only</span>
       </label>
     </div>
-    <p v-if="!canCompare" role="status">Choose at least two environments to view the comparison.</p>
+    <p v-if="!loadingEnvironments && !environmentError && !canCompare" role="status">
+      {{ environments.length < 2 ? 'At least two environments must be available to compare.' : 'Choose at least two environments to view the comparison.' }}
+    </p>
+    <p v-else-if="loadingComparison" role="status">Loading comparison...</p>
+    <div v-else-if="comparisonError" role="alert">
+      <p>{{ comparisonError }}</p>
+      <button type="button" @click="loadComparison">Retry comparison</button>
+    </div>
     <NDataTable
-      v-else
+      v-else-if="canCompare && !loadingEnvironments && !environmentError"
       :columns="columns"
       :data="filteredSolutions"
       :pagination="false"
       :row-key="(row) => row.uniqueName"
       :scroll-x="220 + selectedEnvironments.length * 180"
       striped
-    />
+    >
+      <template #empty>No solutions match the current selection and filters.</template>
+    </NDataTable>
   </main>
 </template>
 
